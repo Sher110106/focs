@@ -1,54 +1,41 @@
-Here’s a line-by-line walkthrough of `1.asm` (written for the MIPS/SPIM simulator):
+# Lab 1 – Concise Program Descriptions
 
-1. `.data`  
-   – Marks the beginning of the data segment, where static variables and constants are stored.
+## 1.asm – “Hello World”
+1. `$a0` ← address of string "Hello World".  
+2. `$v0 = 4`; `syscall` → prints the string.  
+3. `$v0 = 10`; `syscall` → exits.
 
-2. `str: .asciiz "Hello World"`  
-   – Defines a label `str` that points to a NUL-terminated ASCII string (“Hello World”).  
-   – `.asciiz` automatically appends the terminating byte `0x00`.
+## 2.asm – Echo Input
+1. `.space 100` reserves a 100-byte buffer in the data segment.  
+2. `$a0` ← buffer address, `$a1 = 100`, `$v0 = 8`; `syscall` 8 reads up to 100 chars from the console into the buffer.  
+3. `$v0 = 4`; `syscall` → prints whatever was just read (the buffer address remains in `$a0`).  
+4. `$v0 = 10`; `syscall` → exits.
 
-3. `.text`  
-   – Marks the beginning of the text segment, i.e., where instructions (code) live.
+### Register Roles and Execution Flow
 
-4. `main:`  
-   – A label identifying the program’s entry point (what SPIM calls when it starts).
+**Key registers**
 
-5. `la $a0, str`  
-   – `la` (“load address”) loads the address of `str` into register `$a0`.  
-   – By convention, `$a0 – $a3` are used to pass the first four arguments to a system call or function; here `$a0` will hold the pointer to the string we want to print.
+* `$v0` – syscall service selector / possible return value.  
+  – Common services here: `4` (print string), `8` (read string), `10` (exit).
+* `$a0–$a3` – argument registers.  
+  – `$a0` holds a pointer in both programs.  
+  – `$a1` carries the maximum length for syscall `8` in `2.asm`.
 
-6. `li $v0, 4`  
-   – `li` (“load immediate”) sets `$v0` to `4`.  
-   – In SPIM’s syscall convention, `$v0` specifies the service number.  
-   – Service 4 = “print string”.
+**Program flows**
 
-7. `syscall`  
-   – Invokes the kernel service indicated by `$v0`. Because `$v0 = 4`, the kernel prints the NUL-terminated string whose address is in `$a0` (“Hello World”) to the console.
+`1.asm – Hello World`
+1. `la $a0,str` → address of the string in `$a0`.  
+2. `$v0 = 4`; `syscall` → prints the string.  
+3. `$v0 = 10`; `syscall` → exits.
 
-8. (blank line – purely for readability)
+`2.asm – Echo Input`
+1. `la $a0,buffer` → pointer to 100-byte buffer.  
+2. `$a1 = 100`, `$v0 = 8`; `syscall` → reads user input into buffer.  
+3. `$v0 = 4`; `syscall` → prints the buffer back (echo).  
+4. `$v0 = 10`; `syscall` → exits.
 
-9. `li $v0, 10`  
-   – Loads `$v0` with `10`, the service number for “exit”.
+**Why this order?**
 
-10. `syscall`  
-    – Called with `$v0 = 10`, the kernel terminates the program and returns control to the operating system (or ends simulation in SPIM).
-
-11. (trailing blank line)
-
-Key takeaways:
-
-• The program has only two syscalls:  
-  – `4` → print string (needs `$a0` = address of NUL-terminated string).  
-  – `10` → exit (no arguments).  
-
-• All work happens via the syscall interface; there are no explicit loops or registers modified beyond `$a0` and `$v0`.
-
-• Registers used:
-  – `$a0`: argument 0 (pointer to string).  
-  – `$v0`: syscall selector (and sometimes return value).
-
-So the entire program’s control flow is:
-
-1. Load address of `str` into `$a0`.  
-2. Set `$v0 = 4`; syscall → prints “Hello World”.  
-3. Set `$v0 = 10`; syscall → exit.
+1. Syscall convention: set arguments → set `$v0` → `syscall`.  
+2. After reading (`syscall` 8), `$a0` already points to the buffer, so we reuse it for printing.  
+3. Ending with service `10` ensures the simulator terminates cleanly.
