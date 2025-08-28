@@ -1,5 +1,5 @@
 # Lab 1 – Concise Program Descriptions
-
+#lower 32 bits stored in low and higher 32 bits stored in 32
 ## 1.asm – “Hello World”
 1. `$a0` ← address of string "Hello World".  
 2. `$v0 = 4`; `syscall` → prints the string.  
